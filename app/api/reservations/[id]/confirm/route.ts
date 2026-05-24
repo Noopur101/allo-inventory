@@ -4,12 +4,16 @@ const prisma = new PrismaClient();
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  context: {
+    params: Promise<{ id: string }>;
+  }
 ) {
+  const { id } = await context.params;
+
   const reservation =
     await prisma.reservation.findUnique({
       where: {
-        id: params.id,
+        id,
       },
     });
 
@@ -20,9 +24,7 @@ export async function POST(
     );
   }
 
-  if (
-    reservation.expiresAt < new Date()
-  ) {
+  if (reservation.expiresAt < new Date()) {
     return Response.json(
       { error: "Reservation expired" },
       { status: 410 }
